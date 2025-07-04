@@ -33,7 +33,10 @@ Details: ${alert.description || JSON.stringify(alert)}
     res.status(500).send('Error sending alert to Telegram.');
   }
 });
-
+app.get('/', (req, res) => {
+    res.send('Samsara Telegram Webhook is running!');
+  });
+  
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
