@@ -10,14 +10,33 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 app.post('/samsara-alert', async (req, res) => {
-  const alert = req.body;
+  const body = req.body;
+
+  // Default values
+  let alertType = body.eventType || body.event?.eventType || 'Unknown Type';
+  let vehicleName = body.vehicleName || body.event?.vehicleName || 'Unknown Vehicle';
+  let timestamp = body.timestamp || body.eventMs || 'Unknown Time';
+
+  // Prepare readable timestamp if it's in milliseconds
+  if (typeof timestamp === 'number') {
+    const date = new Date(timestamp);
+    timestamp = date.toISOString();
+  }
+
+  // Create readable message
+  let details;
+  try {
+    details = body.description || JSON.stringify(body.event || body, null, 2);
+  } catch {
+    details = 'Could not parse event details.';
+  }
 
   const message = `
 🚨 *Samsara Alert*
-Type: ${alert.alertType || 'N/A'}
-Vehicle: ${alert.vehicleName || 'Unknown'}
-Time: ${alert.timestamp || 'Unknown'}
-Details: ${alert.description || JSON.stringify(alert)}
+*Type*: ${alertType}
+*Vehicle*: ${vehicleName}
+*Time*: ${timestamp}
+*Details*: \`${details}\`
   `;
 
   try {
@@ -33,10 +52,11 @@ Details: ${alert.description || JSON.stringify(alert)}
     res.status(500).send('Error sending alert to Telegram.');
   }
 });
+
 app.get('/', (req, res) => {
-    res.send('Samsara Telegram Webhook is running!');
-  });
-  
+  res.send('Samsara Telegram Webhook is running!');
+});
+
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
