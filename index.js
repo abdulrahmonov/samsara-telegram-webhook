@@ -10,7 +10,7 @@ const groupMap = {
   '4768': '-4883947957'
 };
 
-const DEFAULT_GROUP_CHAT_ID = '-4601056436'; // fallback group if unit not found
+const DEFAULT_GROUP_CHAT_ID = '-4601056436'; // main alerts group
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,7 +20,7 @@ app.use(express.json());
 app.post('/samsara-alert', async (req, res) => {
   const body = req.body;
 
-  // Extract unit number from multiple possible paths
+  // Extract unit number
   const unitNumber =
     body.vehicle?.externalIds?.unitNumber ||
     body.event?.vehicle?.externalIds?.unitNumber ||
@@ -63,12 +63,22 @@ ${details}
 \`\`\`
   `;
 
-  try {
+  const sendMessage = async (chatId) => {
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: chatId,
       text: message,
       parse_mode: 'Markdown'
     });
+  };
+
+  try {
+    // Send to unit-specific group
+    await sendMessage(chatId);
+
+    // Always send to main alerts group (unless it's already the same)
+    if (chatId !== DEFAULT_GROUP_CHAT_ID) {
+      await sendMessage(DEFAULT_GROUP_CHAT_ID);
+    }
 
     res.status(200).send('Alert sent to Telegram.');
   } catch (err) {
