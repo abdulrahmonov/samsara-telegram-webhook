@@ -20,23 +20,36 @@ app.use(express.json());
 app.post('/samsara-alert', async (req, res) => {
   const body = req.body;
 
-  // Extract unit number
+  // Extract unit number from multiple possible paths
   const unitNumber =
     body.vehicle?.externalIds?.unitNumber ||
     body.event?.vehicle?.externalIds?.unitNumber ||
+    body.event?.vehicleName?.match(/\d{4}/)?.[0] ||
     'unknown';
 
   const chatId = groupMap[unitNumber] || DEFAULT_GROUP_CHAT_ID;
 
   // Format fields
-  const alertType = body.eventType || body.event?.eventType || body.event?.text || 'Unknown Type';
+  const alertType =
+    body.eventType || body.event?.eventType || body.event?.text || 'Unknown Type';
+
   let timestamp = body.timestamp || body.eventMs || Date.now();
   if (typeof timestamp === 'number') {
     timestamp = new Date(timestamp).toISOString();
   }
+
   const vehicleName =
-    body.vehicle?.name || body.event?.vehicle?.name || unitNumber || 'Unknown Vehicle';
-  const details = JSON.stringify(body.event?.details || body.event || body, null, 2);
+    body.vehicle?.name ||
+    body.event?.vehicle?.name ||
+    body.event?.vehicleName ||
+    unitNumber ||
+    'Unknown Vehicle';
+
+  const details = JSON.stringify(
+    body.event?.details || body.event || body,
+    null,
+    2
+  );
 
   const message = `
 🚨 *Samsara Alert*
