@@ -12,31 +12,32 @@ app.use(express.json());
 app.post('/samsara-alert', async (req, res) => {
   const body = req.body;
 
-  // Default values
-  let alertType = body.eventType || body.event?.eventType || 'Unknown Type';
-  let vehicleName = body.vehicleName || body.event?.vehicleName || 'Unknown Vehicle';
-  let timestamp = body.timestamp || body.eventMs || 'Unknown Time';
+  // Try multiple fallback paths
+  const alertType = body.eventType || body.event?.eventType || body.event?.text || 'Unknown Type';
+  const vehicleName =
+    body.vehicleName ||
+    body.event?.vehicle?.name ||
+    body.event?.vehicleName ||
+    'Unknown Vehicle';
 
-  // Prepare readable timestamp if it's in milliseconds
+  let timestamp = body.timestamp || body.eventMs || Date.now();
+
+  // Convert ms to ISO if needed
   if (typeof timestamp === 'number') {
-    const date = new Date(timestamp);
-    timestamp = date.toISOString();
+    timestamp = new Date(timestamp).toISOString();
   }
 
-  // Create readable message
-  let details;
-  try {
-    details = body.description || JSON.stringify(body.event || body, null, 2);
-  } catch {
-    details = 'Could not parse event details.';
-  }
+  const details = JSON.stringify(body.event?.details || body.event || body, null, 2);
 
   const message = `
 🚨 *Samsara Alert*
 *Type*: ${alertType}
 *Vehicle*: ${vehicleName}
 *Time*: ${timestamp}
-*Details*: \`${details}\`
+*Details*:
+\`\`\`
+${details}
+\`\`\`
   `;
 
   try {
