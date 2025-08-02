@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 
-const TELEGRAM_BOT_TOKEN = '7683022635:AAH2JSnao2W1GSfwdniZG27qWfqKXvVP7hA';
+const TELEGRAM_BOT_TOKEN = '7683022635:AAGxgaXzZudqXVXC0MemkzbtTp_2-FH7Dxg';
 const MAIN_GROUP_CHAT_ID = '-4601056436'; // your main Telegram group
 
 const app = express();
